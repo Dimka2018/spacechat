@@ -1,0 +1,58 @@
+.welcome-page {
+  width: 100vw;
+  height: 100vh;
+}
+
+.front {
+  position: absolute;
+  top: 35vh;
+  left: 37vw;
+  transition: 1s linear;
+}
+
+.back {
+  position: absolute;
+  top: -10vh;
+  left: 37vw;
+  transform: scale(0.25);
+  transition: 1s linear;
+}
+
+.left {
+  position: absolute;
+  top: 15vh;
+  left: 0;
+  transform: scale(0.5);
+  transition: 1s linear;
+}
+
+.right {
+  position: absolute;
+  top: 15vh;
+  left: 80vw;
+  transform: scale(0.5);
+  transition: 1s linear;
+}
+
+.arrow {
+  width: 10vw;
+  height: 10vw;
+  opacity: 0.1;
+}
+
+.arrow:hover {
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.arrow-right {
+  position: absolute;
+  top: 45vh;
+  right: 22vw;
+}
+
+.arrow-left {
+  position: absolute;
+  top: 45vh;
+  left: 22vw;
+}

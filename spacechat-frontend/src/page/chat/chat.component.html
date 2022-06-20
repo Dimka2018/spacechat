@@ -1,0 +1,51 @@
+<div class="chat-page">
+  <div class="chat-list">
+    <input class="user-search" placeholder="Search..." [(ngModel)]="searchQuery" (input)="findUsers()">
+    <div class="search-result">
+      <div class="search-result-element" *ngFor="let user of searchResult" (click)="selectUser(user)">{{user.login}}</div>
+    </div>
+  </div>
+  <div class="chat-view">
+    <div class="menu">
+      <div class="user-info">{{selectedUser ? selectedUser.login : ''}}</div>
+      <div class="call-menu" *ngIf="selectedUser">
+        <img src="assets/image/call.svg" alt="call" (click)="startCall()"/>
+        <img src="assets/image/video.svg" alt="video">
+      </div>
+    </div>
+    <div class="chat-content">
+      <div class="message-container" *ngIf="selectedUser">
+        <div class="message" *ngFor="let message of messages"
+             [ngClass]="{'input-message': message.direction === 'input', 'output-message': message.direction === 'output'}">
+          <div class="text-content">{{message.text}}</div>
+        </div>
+      </div>
+      <div class="message-send-container" *ngIf="selectedUser">
+        <textarea class="message-content" [(ngModel)]="textContent"></textarea>
+        <div class="send-button" (click)="sendMessage()"></div>
+      </div>
+    </div>
+  </div>
+  <div class="call-output-modal" *ngIf="outputCall">
+    <div class="call-details">Calling...</div>
+    <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
+  </div>
+  <div class="call-input-modal" *ngIf="inputCall">
+    <div class="call-details">Call from {{connectedUser ? connectedUser.login : ''}}</div>
+    <div class="call-control-panel">
+      <img src="assets/image/call.svg" alt="accept" (click)="acceptCall()">
+      <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
+    </div>
+  </div>
+  <div class="current-call-modal" [ngClass]="{'invisible': !currentCall}">
+    <div class="call-details">{{connectedUser ? connectedUser.login : ''}}</div>
+    <div>
+      <video #videoSelf class="video-block"></video>
+      <video #videoCaller class="video-block"></video>
+    </div>
+    <div class="call-control-panel">
+      <img src="assets/image/call.svg" alt="accept" (click)="acceptCall()">
+      <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
+    </div>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/spacechat
+    username: admin
+    password: admin
+  redis:
+    host: localhost
+    port: 6379
+
+  flyway:
+    url: jdbc:postgresql://localhost:5432/spacechat
+    user: admin
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: validate

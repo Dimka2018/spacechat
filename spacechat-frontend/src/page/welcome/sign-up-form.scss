@@ -1,0 +1,49 @@
+.register-form {
+  position: absolute;
+  top: 33vh;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 20vw;
+  height: 25vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  .form-header {
+    width: 100%;
+    height: 15%;
+    text-align: center;
+    font-size: 2vw;
+    color: #00b800;
+    font-weight: bold;
+  }
+
+  .form-input {
+    width: 80%;
+    height: 10%;
+    border: none;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #00b800;
+    text-align: center;
+    font-size: 1vw;
+    border-radius: 1vw;
+  }
+
+  .form-input::placeholder {
+    color: #00b800;
+  }
+
+  .message-container {
+    width: 100%;
+    height: 15%;
+  }
+
+  .submit-button:hover {
+    cursor: pointer;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
