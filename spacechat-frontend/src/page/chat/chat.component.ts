@@ -9,6 +9,7 @@ import {CallCandidateMessage} from "../../entity/CallCandidateMessage";
 import * as SimplePeer from "simple-peer";
 import {StartCallMessage} from "../../entity/StartCallMessage";
 import {SignalData} from "simple-peer";
+import {Chat} from "../../entity/Chat";
 
 @Component({
   selector: 'chat',
@@ -27,13 +28,12 @@ export class ChatComponent implements OnInit {
   searchResult: User[] = [];
 
   selectedUser?: User;
-  messages: Message[] = [];
+  chats: Chat[] = []
+  selectedChat: Chat;
 
   textContent: string = ''
 
   simplePeer?: SimplePeer.Instance
-  //dataChannel: RTCDataChannel;
-  //peerConnection:RTCPeerConnection = new RTCPeerConnection();
   offer?: SignalData;
   connectedUser?: User;
   outputCall: boolean = false;
@@ -41,28 +41,6 @@ export class ChatComponent implements OnInit {
   currentCall: boolean = false;
 
   constructor(private router: Router, private userService: UserService, private chatService: ChatService) {
-    // Setup ice handling
-    /*this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-      if (event.candidate) {
-        let message = new CallCandidateMessage(event.candidate);
-        chatService.sendMessage(message);
-      }
-    };
-
-    // creating data channel
-    this.dataChannel = this.peerConnection.createDataChannel("dataChannel", {
-      // @ts-ignore
-      reliable : true
-    });
-
-    this.dataChannel.onerror = (error: RTCErrorEvent) => console.log("Error occured on datachannel:", error);
-
-    // when we receive a message from the other peer, printing it on the console
-    this.dataChannel.onmessage = (event: MessageEvent) => console.log("message:", event.data);
-
-    this.dataChannel.onclose = () => console.log("data channel is closed");
-
-    this.peerConnection.ondatachannel = (event: RTCDataChannelEvent) => this.dataChannel = event.channel;*/
   }
 
   ngOnInit(): void {
@@ -71,7 +49,7 @@ export class ChatComponent implements OnInit {
       switch (inputMessage.type) {
         case 'TEXT':
           inputMessage.direction = 'input'
-          this.messages.push(inputMessage)
+          this.handleMessage(inputMessage)
           break;
         case 'CALL_START':
           this.connectedUser = new User();
@@ -84,12 +62,8 @@ export class ChatComponent implements OnInit {
           this.outputCall = false;
           break;
         case 'CALL_ANSWER':
-          //this.peerConnection.setRemoteDescription(new RTCSessionDescription(inputMessage.answer));
           this.simplePeer?.signal(inputMessage.answer)
           console.log("connection established successfully!!");
-          break;
-        case 'CALL_CANDIDATE':
-          //this.peerConnection.addIceCandidate(new RTCIceCandidate(inputMessage.candidate));
           break;
       }
     })
@@ -102,9 +76,9 @@ export class ChatComponent implements OnInit {
       message.direction = 'output'
       message.to = this.selectedUser.id!!
       message.text = this.textContent;
-      this.messages.push(message)
       this.chatService.sendMessage(message)
       this.textContent = '';
+      this.handleMessage(message);
     }
   }
 
@@ -145,21 +119,6 @@ export class ChatComponent implements OnInit {
             video!.play();
           });
         });
-
-
-      /*this.peerConnection.createOffer((offer: RTCSessionDescriptionInit) => {
-        // @ts-ignore
-        let message = new StartCallMessage(this.selectedUser.id, offer);
-        this.chatService.sendMessage(message)
-        this.peerConnection.setLocalDescription(offer);
-        // @ts-ignore
-      }, (error) => {
-        alert("Error creating an offer");
-      });
-      this.outputCall = true;
-      this.connectedUser = new User()
-      this.connectedUser.id = this.selectedUser.id;
-      this.connectedUser.login = this.selectedUser.login;*/
     }
   }
 
@@ -204,19 +163,6 @@ export class ChatComponent implements OnInit {
         video!.play();
       });
     });
-
-
-    /*this.peerConnection.setRemoteDescription(new RTCSessionDescription(this.offer!!));
-
-    // create and send an answer to an offer
-    this.peerConnection.createAnswer((answer: RTCSessionDescriptionInit) => {
-      this.peerConnection.setLocalDescription(answer);
-      let message = new CallAnswerMessage(this.connectedUser!!.id!!, answer);
-      this.chatService.sendMessage(message);
-      // @ts-ignore
-    }, (error) => {
-      alert("Error creating an answer");
-    });*/
   }
 
   selectUser(user: User) {
@@ -228,6 +174,20 @@ export class ChatComponent implements OnInit {
   findUsers() {
     this.userService.find(this.searchQuery)
       .subscribe(users => this.searchResult = users);
+  }
+
+  private handleMessage(message: Message) {
+    let filteredChats = this.chats.filter(chat => chat.id === message.fromId);
+    let chat;
+    if (filteredChats.length) {
+      chat = filteredChats[0];
+    } else {
+      chat = new Chat();
+      chat.id = message.fromId;
+      chat.name = message.fromName;
+      this.chats.push(chat)
+    }
+      chat.messages.push(message);
   }
 
 }

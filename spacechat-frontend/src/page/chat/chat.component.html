@@ -4,6 +4,10 @@
     <div class="search-result">
       <div class="search-result-element" *ngFor="let user of searchResult" (click)="selectUser(user)">{{user.login}}</div>
     </div>
+    <div class="chat" *ngFor="let chat of chats">
+      <div class="chat-name">{{chat.name}}</div>
+      <div class="last-message">{{chat.messages[chat.messages.length - 1].text}}</div>
+    </div>
   </div>
   <div class="chat-view">
     <div class="menu">
@@ -15,7 +19,7 @@
     </div>
     <div class="chat-content">
       <div class="message-container" *ngIf="selectedUser">
-        <div class="message" *ngFor="let message of messages"
+        <div class="message" *ngFor="let message of selectedChat.messages"
              [ngClass]="{'input-message': message.direction === 'input', 'output-message': message.direction === 'output'}">
           <div class="text-content">{{message.text}}</div>
         </div>
