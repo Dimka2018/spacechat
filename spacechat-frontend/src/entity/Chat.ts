@@ -4,5 +4,5 @@ export class Chat {
 
   id: string;
   name: string;
-  messages: Message[];
+  messages: Message[] = [];
 }

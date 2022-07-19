@@ -6,5 +6,5 @@ import lombok.Data;
 public class Request {
 
     private Type type;
-    private Long to;
+    private Long toId;
 }

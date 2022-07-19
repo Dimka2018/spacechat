@@ -34,7 +34,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         UserSession userSession = sessions.get(session.getId());
         sessions.values()
                 .stream()
-                .filter(s -> s.getUser().getId().equals(request.getTo()))
+                .filter(s -> s.getUser().getId().equals(request.getToId()))
                 .filter(s -> s.getWebSocketSession().isOpen())
                 .findFirst()
                 .ifPresent(targetUserSession -> handlerList.stream()

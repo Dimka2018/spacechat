@@ -10,21 +10,21 @@
     <img class="arrow arrow-left" src="assets/image/arrow-left.svg" alt="->" (click)="swapLeft()">
     <sphere-form color="crimson" [ngClass]="stageClasses[2]"></sphere-form>
 
-    <div class="login-form" *ngIf="stageClasses[1] === 'front'">
+    <form class="login-form" *ngIf="stageClasses[1] === 'front'">
       <span class="form-header">Sign in</span>
-      <input [(ngModel)]="user.login" class="form-input" placeholder="login">
-      <input [(ngModel)]="user.password" class="form-input" type="password" placeholder="password">
+      <input [(ngModel)]="user.login" class="form-input" placeholder="login" name="username">
+      <input [(ngModel)]="user.password" class="form-input" type="password" placeholder="password" name="password">
       <div class="message-container"></div>
       <input class="form-input submit-button" type="submit" value="Sign in" (click)="login()">
-    </div>
+    </form>
 
-    <div class="register-form" *ngIf="stageClasses[1] === 'left'">
+    <form class="register-form" *ngIf="stageClasses[1] === 'left'">
       <span class="form-header">Sign up</span>
-      <input [(ngModel)]="registrationRequest.login" class="form-input" placeholder="login">
-      <input [(ngModel)]="registrationRequest.password" class="form-input" type="password" placeholder="password">
-      <input [(ngModel)]="registrationRequest.confirm" class="form-input" type="password" placeholder="confirm">
+      <input [(ngModel)]="registrationRequest.login" class="form-input" placeholder="login" name="username">
+      <input [(ngModel)]="registrationRequest.password" class="form-input" type="password" placeholder="password" name="password">
+      <input [(ngModel)]="registrationRequest.confirm" class="form-input" type="password" placeholder="confirm" name="confirm">
       <div class="message-container"></div>
       <input class="form-input submit-button" type="submit" value="Sign up" (click)="register()">
-    </div>
+    </form>
   </div>
 </div>

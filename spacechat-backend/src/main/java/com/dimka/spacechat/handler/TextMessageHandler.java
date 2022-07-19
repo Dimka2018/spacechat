@@ -28,6 +28,7 @@ public class TextMessageHandler implements MessageHandler {
         TextMessageRequest message = mapper.readValue(data, TextMessageRequest.class);
         TextMessageResponse response = new TextMessageResponse()
                 .setFromId(senderSession.getUser().getId())
+                .setFromName(senderSession.getUser().getLogin())
                 .setText(message.getText());
         String responseJson = mapper.writeValueAsString(response);
         receiverSession.getWebSocketSession().sendMessage(new org.springframework.web.socket.TextMessage(responseJson));

@@ -4,7 +4,8 @@ export class Message {
   fromName?: string;
   text?: string;
   direction?: string;
-  to?: string;
+  toId?: string;
+  toName?: string;
   type?: string;
 
 

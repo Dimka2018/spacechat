@@ -24,11 +24,13 @@ export class UserService {
 
   public login(user: User): Observable<void> {
     let formData = new FormData();
-    // @ts-ignore
     formData.append("username", user.login)
-    // @ts-ignore
     formData.append("password", user.password)
     return this.http.post<void>("/api/login", formData);
+  }
+
+  public getUser(): Observable<User> {
+    return this.http.get<User>('/api/user')
   }
 
   public logout(): Observable<void> {

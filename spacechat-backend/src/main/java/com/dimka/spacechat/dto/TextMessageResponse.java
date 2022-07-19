@@ -10,4 +10,5 @@ public class TextMessageResponse {
     private Type type = Type.TEXT;
     private String text;
     private Long fromId;
+    private String fromName;
 }

@@ -53,4 +53,8 @@ public class UserApiService {
         }
         return response;
     }
+
+    public User getCurrentUser() {
+        return SecurityUtils.getUserPrincipal().getUser();
+    }
 }

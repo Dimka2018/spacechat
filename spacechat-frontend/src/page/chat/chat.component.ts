@@ -5,10 +5,9 @@ import {UserService} from "../../service/user.service";
 import {ChatService} from "../../service/chat.service";
 import {Message} from "../../entity/Message";
 import {CallAnswerMessage} from "../../entity/CallAnswerMessage";
-import {CallCandidateMessage} from "../../entity/CallCandidateMessage";
 import * as SimplePeer from "simple-peer";
-import {StartCallMessage} from "../../entity/StartCallMessage";
 import {SignalData} from "simple-peer";
+import {StartCallMessage} from "../../entity/StartCallMessage";
 import {Chat} from "../../entity/Chat";
 
 @Component({
@@ -19,17 +18,17 @@ import {Chat} from "../../entity/Chat";
 export class ChatComponent implements OnInit {
 
   @ViewChild("videoSelf", {static: true})
-  videoSelf?: ElementRef
+  videoSelf: ElementRef
 
   @ViewChild("videoCaller", {static: true})
-  videoCaller?: ElementRef
+  videoCaller: ElementRef
 
+  currentUser: User = new User();
   searchQuery: string = '';
   searchResult: User[] = [];
 
-  selectedUser?: User;
   chats: Chat[] = []
-  selectedChat: Chat;
+  selectedChat: Chat = new Chat();
 
   textContent: string = ''
 
@@ -44,6 +43,8 @@ export class ChatComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userService.getUser()
+      .subscribe(user => this.currentUser = user)
     this.chatService.onMessage((message: MessageEvent) => {
       let inputMessage = JSON.parse(message.data);
       switch (inputMessage.type) {
@@ -70,28 +71,27 @@ export class ChatComponent implements OnInit {
   }
 
   sendMessage() {
-    if (this.selectedUser) {
-      let message = new Message();
-      message.type = 'TEXT'
-      message.direction = 'output'
-      message.to = this.selectedUser.id!!
-      message.text = this.textContent;
-      this.chatService.sendMessage(message)
-      this.textContent = '';
-      this.handleMessage(message);
-    }
+    let message = new Message();
+    message.type = 'TEXT'
+    message.direction = 'output'
+    message.toId = this.selectedChat.id
+    message.toName = this.selectedChat.name
+    message.text = this.textContent;
+    this.chatService.sendMessage(message)
+    this.textContent = '';
+    this.handleMessage(message);
   }
 
   startCall() {
-    if (this.selectedUser && this.selectedUser.id) {
+    if (this.selectedChat && this.selectedChat.id) {
       navigator.mediaDevices
-        .getUserMedia({ video: false, audio: true })
+        .getUserMedia({video: false, audio: true})
         .then((mediaStream) => {
 
           this.outputCall = true;
           this.connectedUser = new User()
-          this.connectedUser.id = this.selectedUser!.id;
-          this.connectedUser.login = this.selectedUser!.login;
+          this.connectedUser.id = this.selectedChat.id;
+          this.connectedUser.login = this.selectedChat.name;
 
           const video = this.videoSelf?.nativeElement;
           video!.srcObject = mediaStream;
@@ -105,7 +105,7 @@ export class ChatComponent implements OnInit {
 
 
           this.simplePeer.on("signal", (offer) => {
-            let message = new StartCallMessage(this.selectedUser!.id!, offer);
+            let message = new StartCallMessage(this.selectedChat.id!, offer);
             this.chatService.sendMessage(message)
           });
           this.simplePeer.on("connect", () => {
@@ -123,52 +123,44 @@ export class ChatComponent implements OnInit {
   }
 
   endCall() {
-    if (this.selectedUser) {
-      let message = new Message();
-      message.type = 'CALL_END';
-      message.to = this.selectedUser.id!!
-      this.chatService.sendMessage(message)
-      this.outputCall = false;
-      this.inputCall = false;
-    }
+    let message = new Message();
+    message.type = 'CALL_END';
+    message.toId = this.selectedChat.id
+    this.chatService.sendMessage(message)
+    this.outputCall = false;
+    this.inputCall = false;
   }
 
   acceptCall() {
-    navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+    navigator.mediaDevices.getUserMedia({video: false, audio: true})
       .then((mediaStream) => {
-      const video = this.videoSelf!.nativeElement;
-      video!.srcObject = mediaStream;
-      video!.play();
-
-      this.simplePeer = new SimplePeer({
-        trickle: false,
-        initiator: false,
-        stream: mediaStream,
-      });
-
-      this.simplePeer.signal(this.offer!);
-
-      this.simplePeer.on("signal", (answer) => {
-        let message = new CallAnswerMessage(this.connectedUser!!.id!!, answer);
-        this.chatService.sendMessage(message);
-      });
-      this.simplePeer.on("connect", () => {
-        this.inputCall = false;
-        this.outputCall = false;
-        this.currentCall = true;
-      });
-      this.simplePeer.on("stream", (stream) => {
-        const video = this.videoCaller!.nativeElement;
-        video!.srcObject = stream;
+        const video = this.videoSelf!.nativeElement;
+        video!.srcObject = mediaStream;
         video!.play();
-      });
-    });
-  }
 
-  selectUser(user: User) {
-    this.selectedUser = user;
-    this.searchQuery = ''
-    this.searchResult = [];
+        this.simplePeer = new SimplePeer({
+          trickle: false,
+          initiator: false,
+          stream: mediaStream,
+        });
+
+        this.simplePeer.signal(this.offer!);
+
+        this.simplePeer.on("signal", (answer) => {
+          let message = new CallAnswerMessage(this.connectedUser!!.id!!, answer);
+          this.chatService.sendMessage(message);
+        });
+        this.simplePeer.on("connect", () => {
+          this.inputCall = false;
+          this.outputCall = false;
+          this.currentCall = true;
+        });
+        this.simplePeer.on("stream", (stream) => {
+          const video = this.videoCaller!.nativeElement;
+          video!.srcObject = stream;
+          video!.play();
+        });
+      });
   }
 
   findUsers() {
@@ -177,17 +169,37 @@ export class ChatComponent implements OnInit {
   }
 
   private handleMessage(message: Message) {
-    let filteredChats = this.chats.filter(chat => chat.id === message.fromId);
+    let chatId = message.direction === 'input' ? message.fromId : message.toId;
+    let filteredChats = this.chats.filter(chat => chat.id === chatId);
     let chat;
     if (filteredChats.length) {
       chat = filteredChats[0];
     } else {
       chat = new Chat();
-      chat.id = message.fromId;
-      chat.name = message.fromName;
+      chat.id = message.direction === 'input' ? message.fromId : message.toId;
+      chat.name = message.direction === 'input' ? message.fromName : message.toName;
       this.chats.push(chat)
     }
-      chat.messages.push(message);
+    chat.messages.push(message);
+    if (message.direction === 'output') {
+      this.selectChat(chat.id)
+    }
+  }
+
+  selectChat(id: string, name?: string) {
+    let filteredChats = this.chats.filter(chat => chat.id === id);
+    let chat;
+    if (filteredChats.length) {
+      chat = filteredChats[0];
+    } else {
+      chat = new Chat();
+      chat.id = id;
+      chat.name = name;
+      this.chats.push(chat)
+    }
+    this.selectedChat = chat;
+    this.searchQuery = ''
+    this.searchResult = [];
   }
 
 }
