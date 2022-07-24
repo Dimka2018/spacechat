@@ -22,7 +22,8 @@ export class ChatService {
   }
 
   connect() {
-    this.connection = new WebSocket('ws:localhost:8080/api/chat');
+    let protocol = window.location.protocol === 'https:' ? "wss" : "ws";
+    this.connection = new WebSocket(`${protocol}:${window.location.host}/api/chat`);
     this.connection.onmessage = this.onMessageCallback;
     this.connection.onerror = () => setTimeout(() => this.connect(), 1000)
   }

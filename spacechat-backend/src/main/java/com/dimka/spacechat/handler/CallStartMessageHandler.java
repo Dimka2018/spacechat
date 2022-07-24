@@ -4,6 +4,7 @@ import com.dimka.spacechat.dto.CallStartMessageRequest;
 import com.dimka.spacechat.dto.CallStartMessageResponse;
 import com.dimka.spacechat.dto.Type;
 import com.dimka.spacechat.entity.UserSession;
+import com.dimka.spacechat.holder.CallHolder;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,9 @@ public class CallStartMessageHandler implements MessageHandler{
     @Override
     public void handle(String data, UserSession senderSession, UserSession receiverSession) {
         CallStartMessageRequest request = mapper.readValue(data, CallStartMessageRequest.class);
+        CallHolder.startCall(request.getCallId(), senderSession.getUser().getId(), receiverSession.getUser().getId());
         CallStartMessageResponse response = new CallStartMessageResponse()
+                .setCallId(request.getCallId())
                 .setOffer(request.getOffer())
                 .setFromId(senderSession.getUser().getId())
                 .setFromName(senderSession.getUser().getLogin());

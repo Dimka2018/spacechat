@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "network": "ng serve --host 0.0.0.0 --ssl true --proxy-config config/localhost.proxy.conf.js",
     "localhost": "ng serve --ssl false --proxy-config  config/localhost.proxy.conf.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
@@ -22,6 +23,7 @@
     "rxjs": "~6.6.0",
     "simple-peer": "^9.11.1",
     "tslib": "^2.3.0",
+    "uuid": "^8.3.2",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {

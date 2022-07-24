@@ -1,8 +1,10 @@
 package com.dimka.spacechat.handler;
 
-import com.dimka.spacechat.dto.MessageResponse;
+import com.dimka.spacechat.dto.CallEndMessageResponse;
+import com.dimka.spacechat.dto.CallStartMessageRequest;
 import com.dimka.spacechat.dto.Type;
 import com.dimka.spacechat.entity.UserSession;
+import com.dimka.spacechat.holder.CallHolder;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +27,10 @@ public class CallEndMessageHandler implements MessageHandler {
     @SneakyThrows
     @Override
     public void handle(String data, UserSession senderSession, UserSession receiverSession) {
-        MessageResponse response = new MessageResponse()
-                .setType(Type.CALL_END)
-                .setDirection("input")
-                .setFromId(senderSession.getUser().getId());
+        CallStartMessageRequest request = mapper.readValue(data, CallStartMessageRequest.class);
+        CallHolder.endCall(request.getCallId(), senderSession.getUser().getId());
+        CallEndMessageResponse response = new CallEndMessageResponse()
+                .setFromId(request.getCallId());
         String responseJson = mapper.writeValueAsString(response);
         receiverSession.getWebSocketSession().sendMessage(new TextMessage(responseJson));
     }

@@ -44,12 +44,15 @@
   </div>
   <div class="current-call-modal" [ngClass]="{'invisible': !currentCall}">
     <div class="call-details">{{connectedUser ? connectedUser.login : ''}}</div>
-    <div>
+    <div class="video-container">
       <video #videoSelf class="video-block"></video>
       <video #videoCaller class="video-block"></video>
     </div>
     <div class="call-control-panel">
-      <img src="assets/image/call.svg" alt="accept" (click)="acceptCall()">
+      <img src="assets/image/microphone.svg" alt="microphone off" *ngIf="microphone" (click)="toggleMicrophone()">
+      <img src="assets/image/microphone-slash.svg" alt="microphone on" *ngIf="!microphone" (click)="toggleMicrophone()">
+      <img src="assets/image/video.svg" alt="camera off" *ngIf="camera" (click)="toggleCamera()">
+      <img src="assets/image/video-slash.svg" alt="camera on" *ngIf="!camera" (click)="toggleCamera()">
       <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
     </div>
   </div>

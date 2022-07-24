@@ -12,4 +12,5 @@ public class CallStartMessageResponse {
     private WebRtcOffer offer;
     private Long fromId;
     private String fromName;
+    private String callId;
 }

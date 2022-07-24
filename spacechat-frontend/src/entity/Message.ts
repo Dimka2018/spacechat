@@ -8,5 +8,4 @@ export class Message {
   toName?: string;
   type?: string;
 
-
 }
