@@ -38,7 +38,6 @@ export class ChatComponent implements OnInit {
 
   textContent = ''
 
-  localStream;
   simplePeer: SimplePeer.Instance
   offer: SignalData;
   connectedUser: User;
@@ -96,11 +95,11 @@ export class ChatComponent implements OnInit {
     this.handleMessage(message);
   }
 
-  startCall() {
+  startCall(videoCall: boolean) {
     if (this.selectedChat && this.selectedChat.id) {
+      this.camera = videoCall;
       navigator.mediaDevices
-        .getUserMedia({video: true, audio: false})
-        .then((mediaStream) => {
+        .getUserMedia({video: true, audio: true}).then(mediaStream => {
 
           this.outputCall = true;
           this.connectedUser = new User()
@@ -109,7 +108,7 @@ export class ChatComponent implements OnInit {
 
           const video = this.videoSelf.nativeElement;
           video.srcObject = mediaStream;
-          video.play();
+          video.muted = true
 
           this.simplePeer = new SimplePeer({
             trickle: false,
@@ -124,16 +123,17 @@ export class ChatComponent implements OnInit {
             this.chatService.sendMessage(message)
           });
           this.simplePeer.on("connect", () => {
-            console.log("connected!!!")
             this.inputCall = false;
             this.outputCall = false;
             this.currentCall = true;
           });
           this.simplePeer.on("stream", (stream) => {
-            this.localStream = stream;
             const video = this.videoCaller.nativeElement;
             video.srcObject = stream;
-            video.play();
+
+            if (!videoCall) {
+              this.disableCamera();
+            }
           });
         });
     }
@@ -149,15 +149,16 @@ export class ChatComponent implements OnInit {
     this.call = undefined;
   }
 
-  acceptCall() {
+  acceptCall(videoCall: boolean) {
     this.inputCall = false;
     this.outputCall = false;
     this.currentCall = true;
-    navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    this.camera = videoCall;
+    navigator.mediaDevices.getUserMedia({video: true, audio: true})
       .then((mediaStream) => {
         const video = this.videoSelf.nativeElement;
         video.srcObject = mediaStream;
-        video.play();
+        video.muted = true
 
         this.simplePeer = new SimplePeer({
           trickle: false,
@@ -175,16 +176,17 @@ export class ChatComponent implements OnInit {
           this.currentCall = true;
         });
         this.simplePeer.on("connect", () => {
-          console.log("connected!!!")
           this.inputCall = false;
           this.outputCall = false;
           this.currentCall = true;
         });
         this.simplePeer.on("stream", (stream) => {
-          this.localStream = stream
           const video = this.videoCaller.nativeElement;
           video.srcObject = stream;
-          video.play();
+
+          if (!videoCall) {
+            this.disableCamera();
+          }
         });
       });
   }
@@ -228,18 +230,32 @@ export class ChatComponent implements OnInit {
     this.searchResult = [];
   }
 
-  toggleMicrophone() {
-    this.microphone = !this.microphone;
+  enableMicrophone() {
+    this.videoSelf.nativeElement.srcObject.getAudioTracks().forEach(track => track.enabled = true);
+    this.microphone = true;
   }
 
-  toggleCamera() {
-    this.camera = !this.camera;
+  disableMicrophone() {
+    this.videoSelf.nativeElement.srcObject.getAudioTracks().forEach(track => track.enabled = false);
+    this.microphone = false;
+  }
+
+  enableCamera() {
+    this.videoSelf.nativeElement.srcObject.getVideoTracks().forEach(track => track.enabled = true);
+    this.camera = true;
+  }
+
+  disableCamera() {
+    this.videoSelf.nativeElement.srcObject.getVideoTracks().forEach(track => track.enabled = false);
+    this.camera = false;
   }
 
   stopVideo() {
-    this.videoSelf.nativeElement.srcObject.getTracks().forEach(function(track) { track.stop(); });
-    this.videoSelf.nativeElement.src = '';
-    this.videoCaller.nativeElement.src = '';
+    if (this.videoSelf.nativeElement.srcObject) {
+      this.videoSelf.nativeElement.srcObject.getTracks().forEach(track => track.stop());
+      this.videoSelf.nativeElement.src = '';
+      this.videoCaller.nativeElement.src = '';
+    }
   }
 
 }
