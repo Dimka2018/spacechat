@@ -308,6 +308,8 @@
   flex-direction: column;
   align-items: center;
   background: black;
+  resize: both;
+  overflow: hidden;
 
   .call-details {
     width: 100%;
