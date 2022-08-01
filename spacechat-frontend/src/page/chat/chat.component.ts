@@ -33,17 +33,13 @@ export class ChatComponent implements OnInit {
   chats: Chat[] = []
   selectedChat: Chat = new Chat();
   call: Call;
-  camera = false;
+  camera = true;
   microphone = true;
 
   textContent = ''
 
   simplePeer: SimplePeer.Instance
   offer: SignalData;
-  connectedUser: User;
-  outputCall = false;
-  inputCall = false;
-  currentCall = false;
 
   constructor(private router: Router, private userService: UserService, private chatService: ChatService) {
   }
@@ -59,25 +55,16 @@ export class ChatComponent implements OnInit {
           this.handleMessage(inputMessage)
           break;
         case 'CALL_START':
-          this.connectedUser = new User();
-          this.connectedUser.id = inputMessage.fromId;
-          this.connectedUser.login = inputMessage.fromName;
           this.offer = inputMessage.offer;
-          this.call = new Call(inputMessage.callId)
-          this.inputCall = true;
+          this.call = new Call(inputMessage.callId, "ANSWER", inputMessage.callName, inputMessage.participantNames);
           break;
         case 'CALL_END':
           this.stopVideo();
-          this.inputCall = false;
-          this.outputCall = false;
-          this.currentCall = false;
           this.call = undefined;
           break;
         case 'CALL_ANSWER':
+          this.call.status = 'CONNECTED'
           this.simplePeer.signal(inputMessage.answer)
-          this.outputCall = false;
-          this.inputCall = false;
-          this.currentCall = true;
           break;
       }
     })
@@ -96,99 +83,57 @@ export class ChatComponent implements OnInit {
   }
 
   startCall(videoCall: boolean) {
-    if (this.selectedChat && this.selectedChat.id) {
-      this.camera = videoCall;
-      navigator.mediaDevices
-        .getUserMedia({video: true, audio: true}).then(mediaStream => {
+    let callId = uuid();
+    this.call = new Call(callId, 'CONNECTING', '', [this.selectedChat.name])
+    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(mediaStream => {
+      this.videoSelf.nativeElement.srcObject = mediaStream;
+      if (!videoCall) {
+        this.disableCamera();
+      }
+      this.simplePeer = new SimplePeer({
+        trickle: false,
+        initiator: true,
+        stream: mediaStream,
+      });
 
-          this.outputCall = true;
-          this.connectedUser = new User()
-          this.connectedUser.id = this.selectedChat.id;
-          this.connectedUser.login = this.selectedChat.name;
-
-          const video = this.videoSelf.nativeElement;
-          video.srcObject = mediaStream;
-          video.muted = true
-
-          this.simplePeer = new SimplePeer({
-            trickle: false,
-            initiator: true,
-            stream: mediaStream,
-          });
-
-          this.simplePeer.on("signal", (offer) => {
-            let callId = uuid();
-            this.call = new Call(callId)
-            let message = new StartCallMessage(callId, this.selectedChat.id, offer);
-            this.chatService.sendMessage(message)
-          });
-          this.simplePeer.on("connect", () => {
-            this.inputCall = false;
-            this.outputCall = false;
-            this.currentCall = true;
-          });
-          this.simplePeer.on("stream", (stream) => {
-            const video = this.videoCaller.nativeElement;
-            video.srcObject = stream;
-
-            if (!videoCall) {
-              this.disableCamera();
-            }
-          });
-        });
-    }
+      this.simplePeer.on("signal", offer => {
+        this.call.status = 'OFFER';
+        let message = new StartCallMessage(callId, this.selectedChat.id, offer);
+        this.chatService.sendMessage(message)
+      });
+      this.simplePeer.on("stream", stream => this.videoCaller.nativeElement.srcObject = stream);
+    });
   }
 
   endCall() {
     this.stopVideo();
-    let message = new EndCallMessage(this.call.id,this.connectedUser.id);
+    let message = new EndCallMessage(this.call.id);
     this.chatService.sendMessage(message)
-    this.outputCall = false;
-    this.inputCall = false;
-    this.currentCall = false;
     this.call = undefined;
   }
 
   acceptCall(videoCall: boolean) {
-    this.inputCall = false;
-    this.outputCall = false;
-    this.currentCall = true;
-    this.camera = videoCall;
-    navigator.mediaDevices.getUserMedia({video: true, audio: true})
-      .then((mediaStream) => {
-        const video = this.videoSelf.nativeElement;
-        video.srcObject = mediaStream;
-        video.muted = true
+    this.call.status = 'CONNECTED'
+    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(mediaStream => {
+      this.videoSelf.nativeElement.srcObject = mediaStream;
+      if (!videoCall) {
+        this.disableCamera();
+      }
 
-        this.simplePeer = new SimplePeer({
-          trickle: false,
-          initiator: false,
-          stream: mediaStream,
-        });
-
-        this.simplePeer.signal(this.offer);
-
-        this.simplePeer.on("signal", (answer) => {
-          let message = new CallAnswerMessage(this.call.id, this.connectedUser.id, answer);
-          this.chatService.sendMessage(message);
-          this.inputCall = false;
-          this.outputCall = false;
-          this.currentCall = true;
-        });
-        this.simplePeer.on("connect", () => {
-          this.inputCall = false;
-          this.outputCall = false;
-          this.currentCall = true;
-        });
-        this.simplePeer.on("stream", (stream) => {
-          const video = this.videoCaller.nativeElement;
-          video.srcObject = stream;
-
-          if (!videoCall) {
-            this.disableCamera();
-          }
-        });
+      this.simplePeer = new SimplePeer({
+        trickle: false,
+        initiator: false,
+        stream: mediaStream,
       });
+
+      this.simplePeer.signal(this.offer);
+
+      this.simplePeer.on("signal", answer => {
+        let message = new CallAnswerMessage(this.call.id, answer);
+        this.chatService.sendMessage(message);
+      });
+      this.simplePeer.on("stream", stream => this.videoCaller.nativeElement.srcObject = stream);
+    });
   }
 
   findUsers() {

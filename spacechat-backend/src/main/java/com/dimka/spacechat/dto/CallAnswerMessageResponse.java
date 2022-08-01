@@ -10,4 +10,5 @@ public class CallAnswerMessageResponse {
 
     private Type type = Type.CALL_ANSWER;
     private WebRtcOffer answer;
+    private String callId;
 }

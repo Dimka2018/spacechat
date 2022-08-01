@@ -32,15 +32,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
         Request request = mapper.readValue(message.getPayload(), Request.class);
         UserSession userSession = sessions.get(session.getId());
-        sessions.values()
+        UserSession targetUser = sessions.values()
                 .stream()
                 .filter(s -> s.getUser().getId().equals(request.getToId()))
                 .filter(s -> s.getWebSocketSession().isOpen())
                 .findFirst()
-                .ifPresent(targetUserSession -> handlerList.stream()
-                        .filter(handler -> handler.canHandle(request.getType()))
-                        .findFirst()
-                        .ifPresent(handler -> handler.handle(message.getPayload(), userSession, targetUserSession)));
+                .orElse(null);
+        handlerList.stream()
+                .filter(handler -> handler.canHandle(request.getType()))
+                .findFirst()
+                .ifPresent(handler -> handler.handle(message.getPayload(), userSession, targetUser));
     }
 
     @Override

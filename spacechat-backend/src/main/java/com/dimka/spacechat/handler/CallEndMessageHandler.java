@@ -1,5 +1,6 @@
 package com.dimka.spacechat.handler;
 
+import com.dimka.spacechat.dto.CallEndMessageRequest;
 import com.dimka.spacechat.dto.CallEndMessageResponse;
 import com.dimka.spacechat.dto.CallStartMessageRequest;
 import com.dimka.spacechat.dto.Type;
@@ -11,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
+import java.util.Collection;
 
 @RequiredArgsConstructor
 @Component
@@ -27,11 +31,19 @@ public class CallEndMessageHandler implements MessageHandler {
     @SneakyThrows
     @Override
     public void handle(String data, UserSession senderSession, UserSession receiverSession) {
-        CallStartMessageRequest request = mapper.readValue(data, CallStartMessageRequest.class);
+        CallEndMessageRequest request = mapper.readValue(data, CallEndMessageRequest.class);
+        Collection<UserSession> participants = CallHolder.getCallParticipants(request.getCallId());
         CallHolder.endCall(request.getCallId(), senderSession.getUser().getId());
         CallEndMessageResponse response = new CallEndMessageResponse()
                 .setFromId(request.getCallId());
         String responseJson = mapper.writeValueAsString(response);
-        receiverSession.getWebSocketSession().sendMessage(new TextMessage(responseJson));
+        participants.stream()
+                .filter(session -> !session.getUser().getId().equals(senderSession.getUser().getId()))
+                .forEach(session -> sendMessage(responseJson, session.getWebSocketSession()));
+    }
+
+    @SneakyThrows
+    private void sendMessage(String data, WebSocketSession session) {
+        session.sendMessage(new TextMessage(data));
     }
 }

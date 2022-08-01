@@ -4,6 +4,8 @@ import com.dimka.spacechat.entity.WebRtcOffer;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 @Accessors(chain = true)
 @Data
 public class CallStartMessageResponse {
@@ -13,4 +15,6 @@ public class CallStartMessageResponse {
     private Long fromId;
     private String fromName;
     private String callId;
+    private List<String> participantNames;
+    private String callName;
 }

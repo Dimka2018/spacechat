@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class CallEndMessageRequest {
 
-    private String chatId;
+    private String callId;
 }

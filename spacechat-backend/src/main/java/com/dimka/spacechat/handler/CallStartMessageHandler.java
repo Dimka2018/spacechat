@@ -12,6 +12,8 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Component
 public class CallStartMessageHandler implements MessageHandler{
@@ -28,9 +30,10 @@ public class CallStartMessageHandler implements MessageHandler{
     @Override
     public void handle(String data, UserSession senderSession, UserSession receiverSession) {
         CallStartMessageRequest request = mapper.readValue(data, CallStartMessageRequest.class);
-        CallHolder.startCall(request.getCallId(), senderSession.getUser().getId(), receiverSession.getUser().getId());
+        CallHolder.startCall(request.getCallId(), senderSession, receiverSession);
         CallStartMessageResponse response = new CallStartMessageResponse()
                 .setCallId(request.getCallId())
+                .setParticipantNames(List.of(senderSession.getUser().getLogin()))
                 .setOffer(request.getOffer())
                 .setFromId(senderSession.getUser().getId())
                 .setFromName(senderSession.getUser().getLogin());

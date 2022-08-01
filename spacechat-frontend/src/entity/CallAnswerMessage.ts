@@ -4,12 +4,10 @@ export class CallAnswerMessage {
 
   type: string = 'CALL_ANSWER';
   answer: SignalData;
-  toId: string
-  calId: string
+  callId: string
 
-  constructor(callId: string, toId: string, answer: SignalData) {
+  constructor(callId: string, answer: SignalData) {
     this.answer = answer;
-    this.toId = toId;
-    this.calId = callId
+    this.callId = callId
   }
 }

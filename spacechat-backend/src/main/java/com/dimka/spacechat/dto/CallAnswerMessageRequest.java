@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 public class CallAnswerMessageRequest {
 
+    private String callId;
     private WebRtcOffer answer;
 }
