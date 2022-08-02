@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {Router} from "@angular/router";
 import {User} from "../../entity/User";
 import {UserService} from "../../service/user.service";
@@ -18,13 +18,19 @@ import {EndCallMessage} from "../../entity/EndCallMessage";
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, AfterViewInit {
 
   @ViewChild("videoSelf", {static: true})
   videoSelf: ElementRef
 
   @ViewChild("videoCaller", {static: true})
   videoCaller: ElementRef
+
+  @ViewChild("callHeader")
+  callHeader: ElementRef
+
+  @ViewChild("callFrame")
+  callFrame: ElementRef
 
   currentUser: User = new User();
   searchQuery = '';
@@ -42,6 +48,10 @@ export class ChatComponent implements OnInit {
   offer: SignalData;
 
   constructor(private router: Router, private userService: UserService, private chatService: ChatService) {
+  }
+
+  ngAfterViewInit(): void {
+    this.dragElement()
   }
 
   ngOnInit(): void {
@@ -200,6 +210,32 @@ export class ChatComponent implements OnInit {
       this.videoSelf.nativeElement.srcObject.getTracks().forEach(track => track.stop());
       this.videoSelf.nativeElement.src = '';
       this.videoCaller.nativeElement.src = '';
+    }
+  }
+
+  dragElement() {
+    let fromPositionX = 0;
+    let fromPositionY = 0;
+
+    let closeDragElement = () => {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+
+    this.callHeader.nativeElement.onmousedown = e => {
+      e.preventDefault();
+      fromPositionX = e.clientX;
+      fromPositionY = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    };
+
+    let elementDrag = e => {
+      e.preventDefault();
+      this.callFrame.nativeElement.style.top = (this.callFrame.nativeElement.offsetTop - (fromPositionY - e.clientY)) + "px";
+      this.callFrame.nativeElement.style.left = (this.callFrame.nativeElement.offsetLeft - (fromPositionX - e.clientX)) + "px";
+      fromPositionX = e.clientX;
+      fromPositionY = e.clientY;
     }
   }
 

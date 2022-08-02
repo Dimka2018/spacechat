@@ -31,11 +31,13 @@
       </div>
     </div>
   </div>
-  <div class="current-call-modal" [ngClass]="{'invisible': !call}">
-    <div class="call-details" *ngIf="call && call.status === 'CONNECTING'">CONNECTING...</div>
-    <div class="call-details" *ngIf="call && call.status === 'OFFER'">Ringing...</div>
-    <div class="call-details" *ngIf="call && call.status === 'ANSWER'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
-    <div class="call-details" *ngIf="call && call.status === 'CONNECTED'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
+  <div #callFrame class="current-call-modal" [ngClass]="{'invisible': !call}">
+    <div #callHeader class="call-details">
+      <div class="call-details" *ngIf="call && call.status === 'CONNECTING'">CONNECTING...</div>
+      <div class="call-details" *ngIf="call && call.status === 'OFFER'">Ringing...</div>
+      <div class="call-details" *ngIf="call && call.status === 'ANSWER'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
+      <div class="call-details" *ngIf="call && call.status === 'CONNECTED'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
+    </div>
     <div class="video-container">
       <video #videoSelf class="video-block" autoplay></video>
       <video #videoCaller class="video-block" autoplay></video>
