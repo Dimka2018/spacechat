@@ -5,5 +5,7 @@ public enum Type {
     TEXT,
     CALL_START,
     CALL_END,
-    CALL_ANSWER
+    CALL_ANSWER,
+    SCREEN_SHARE_START,
+    SCREEN_SHARE_END
 }

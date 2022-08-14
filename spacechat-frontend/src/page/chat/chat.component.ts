@@ -12,6 +12,8 @@ import {Chat} from "../../entity/Chat";
 import {v4 as uuid} from 'uuid';
 import {Call} from "../../entity/Call";
 import {EndCallMessage} from "../../entity/EndCallMessage";
+import {ScreenShareStartMessage} from "../../entity/ScreenShareStartMessage";
+import {ScreenShareEndMessage} from "../../entity/ScreenShareEndMessage";
 
 @Component({
   selector: 'chat',
@@ -32,13 +34,16 @@ export class ChatComponent implements OnInit, AfterViewInit {
   @ViewChild("callFrame")
   callFrame: ElementRef
 
+  @ViewChild('screen')
+  screen: ElementRef
+
   currentUser: User = new User();
   searchQuery = '';
   searchResult: User[] = [];
 
   chats: Chat[] = []
   selectedChat: Chat = new Chat();
-  call: Call;
+  call: Call// = new Call('', 'CONNECTED', '', ['']);
   camera = true;
   microphone = true;
 
@@ -76,6 +81,14 @@ export class ChatComponent implements OnInit, AfterViewInit {
           this.call.status = 'CONNECTED'
           this.simplePeer.signal(inputMessage.answer)
           break;
+        case 'SCREEN_SHARE_START':
+          this.screen.nativeElement.srcObject = this.videoCaller.nativeElement.srcObject;
+          this.call.screenShareOwner = inputMessage.screenOwnerName;
+          break;
+        case 'SCREEN_SHARE_END':
+          this.call.screenShareOwner = undefined;
+          this.screen.nativeElement.srcObject = undefined;
+          break;
       }
     })
   }
@@ -95,11 +108,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
   startCall(videoCall: boolean) {
     let callId = uuid();
     this.call = new Call(callId, 'CONNECTING', '', [this.selectedChat.name])
-    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(mediaStream => {
-      this.videoSelf.nativeElement.srcObject = mediaStream;
-      if (!videoCall) {
-        this.disableCamera();
-      }
+    navigator.mediaDevices.getUserMedia({video: videoCall, audio: true}).then(mediaStream => {
       this.simplePeer = new SimplePeer({
         trickle: false,
         initiator: true,
@@ -111,7 +120,13 @@ export class ChatComponent implements OnInit, AfterViewInit {
         let message = new StartCallMessage(callId, this.selectedChat.id, offer);
         this.chatService.sendMessage(message)
       });
-      this.simplePeer.on("stream", stream => this.videoCaller.nativeElement.srcObject = stream);
+      this.simplePeer.on("stream", stream => {
+        this.videoCaller.nativeElement.srcObject = stream;
+      });
+      this.videoSelf.nativeElement.srcObject = mediaStream;
+      if (!videoCall) {
+        this.disableCamera();
+      }
     });
   }
 
@@ -124,11 +139,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
   acceptCall(videoCall: boolean) {
     this.call.status = 'CONNECTED'
-    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(mediaStream => {
-      this.videoSelf.nativeElement.srcObject = mediaStream;
-      if (!videoCall) {
-        this.disableCamera();
-      }
+    navigator.mediaDevices.getUserMedia({video: videoCall, audio: true}).then(mediaStream => {
 
       this.simplePeer = new SimplePeer({
         trickle: false,
@@ -142,8 +153,39 @@ export class ChatComponent implements OnInit, AfterViewInit {
         let message = new CallAnswerMessage(this.call.id, answer);
         this.chatService.sendMessage(message);
       });
-      this.simplePeer.on("stream", stream => this.videoCaller.nativeElement.srcObject = stream);
+      this.simplePeer.on("stream", stream => {
+        this.videoCaller.nativeElement.srcObject = stream
+      });
+      this.videoSelf.nativeElement.srcObject = mediaStream;
     });
+  }
+
+  startScreenSharing() {
+    this.call.selfScreenShare = true;
+    // @ts-ignore
+    navigator.mediaDevices.getDisplayMedia({video: {cursor: 'always'}, audio: false}).then(mediaStream => {
+      let message = new ScreenShareStartMessage(this.call.id);
+      this.chatService.sendMessage(message);
+      let currentStream = this.videoSelf.nativeElement.srcObject;
+      this.simplePeer.replaceTrack(currentStream.getVideoTracks()[0], mediaStream.getVideoTracks()[0], currentStream);
+    })
+  }
+
+  endScreenSharing() {
+    let message = new ScreenShareEndMessage(this.call.id);
+    this.chatService.sendMessage(message);
+    this.call.selfScreenShare = false;
+    navigator.mediaDevices.getUserMedia({video: true, audio:  true}).then(mediaStream => {
+      let currentStream = this.videoSelf.nativeElement.srcObject;
+      currentStream.getTracks().forEach(track => track.stop())
+      this.simplePeer.replaceTrack(currentStream.getVideoTracks()[0], mediaStream.getVideoTracks()[0], currentStream);
+      this.simplePeer.replaceTrack(currentStream.getAudioTracks()[0], mediaStream.getAudioTracks()[0], currentStream);
+      this.videoSelf.nativeElement.srcObject = mediaStream;
+      if (!this.camera) {
+        this.disableCamera();
+      }
+
+    })
   }
 
   findUsers() {

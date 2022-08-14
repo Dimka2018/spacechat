@@ -38,9 +38,12 @@
       <div class="call-details" *ngIf="call && call.status === 'ANSWER'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
       <div class="call-details" *ngIf="call && call.status === 'CONNECTED'">{{call ? call.name || call.participants.join(', ') : ''}}</div>
     </div>
-    <div class="video-container">
+    <div class="video-container" [ngClass]="{'invisible': call && call.screenShareOwner}">
       <video #videoSelf class="video-block" autoplay></video>
       <video #videoCaller class="video-block" autoplay></video>
+    </div>
+    <div class="video-container" [ngClass]="{'invisible': call && !call.screenShareOwner}">
+      <video #screen class="video-block" autoplay></video>
     </div>
     <div class="call-control-panel" *ngIf="call &&  (call.status === 'CONNECTING' || call.status === 'OFFER')">
       <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
@@ -53,6 +56,8 @@
     <div class="call-control-panel" *ngIf="call && call.status === 'CONNECTED'">
       <img src="assets/image/microphone.svg" alt="microphone off" *ngIf="!microphone" (click)="enableMicrophone()">
       <img src="assets/image/microphone-slash.svg" alt="microphone on" *ngIf="microphone" (click)="disableMicrophone()">
+      <img src="assets/image/screen-share.svg" alt="share screen" *ngIf="!call.selfScreenShare" (click)="startScreenSharing()">
+      <img src="assets/image/screen-share-off.svg" alt="disable screen sharing" *ngIf="call.selfScreenShare" (click)="endScreenSharing()">
       <img src="assets/image/video.svg" alt="camera off" *ngIf="!camera" (click)="enableCamera()">
       <img src="assets/image/video-slash.svg" alt="camera on" *ngIf="camera" (click)="disableCamera()">
       <img src="assets/image/cancel.svg" alt="cancel" (click)="endCall()">
